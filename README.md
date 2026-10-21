@@ -10,11 +10,17 @@ and claude-go only decides which one runs.
 ## install
 
 ```
+brew install Svector-anu/tap/claude-go
+```
+
+no go needed, it installs the prebuilt release. no homebrew? this does the same, no sudo, and checks the
+download's sha-256 before installing to `~/.local/bin`:
+
+```
 curl -fsSL https://raw.githubusercontent.com/Svector-anu/claude-go/main/install.sh | sh
 ```
 
-macos and linux, no sudo. it checks the download's sha-256 before installing to `~/.local/bin`. with go
-1.26 you can use `go install github.com/Svector-anu/claude-go/cmd/claude-go@latest` instead. then:
+with go 1.26 you can also use `go install github.com/Svector-anu/claude-go/cmd/claude-go@latest`. then:
 
 ```
 claude-go setup                          # once
