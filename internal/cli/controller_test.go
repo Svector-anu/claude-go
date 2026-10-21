@@ -253,9 +253,18 @@ func TestLongStateDirectoryDegradesWithoutBreakingTheSession(t *testing.T) {
 	go func() { done <- Run(context.Background(), []string{"run", "--account", "a"}, sessEnv) }()
 	waitUntil(t, func() bool { return len(h.starter().snapshot()) == before+1 })
 	for _, kv := range h.starter().snapshot()[before].Env {
-		if strings.HasPrefix(kv, "CLAUDE_GO_SOCKET=") && len(h.home) > 60 {
-			t.Errorf("no socket should be advertised when none is served: %s", kv)
+		path, advertised := strings.CutPrefix(kv, "CLAUDE_GO_SOCKET=")
+		if !advertised {
+			continue
 		}
+		// The path limit differs by platform (about 104 bytes on macOS, 108 on Linux),
+		// so the invariant is: a socket that is advertised is one that is served.
+		conn, err := net.Dial("unix", path)
+		if err != nil {
+			t.Errorf("no socket should be advertised when none is served: %s (%v)", kv, err)
+			continue
+		}
+		conn.Close()
 	}
 	if sessErr.String() != "" {
 		t.Errorf("a missing socket must not print into the session: %q", sessErr.String())
