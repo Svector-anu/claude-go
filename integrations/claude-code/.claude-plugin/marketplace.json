@@ -1,0 +1,12 @@
+{
+  "name": "claude-go-integrations",
+  "description": "Optional Claude Code extensions for claude-go.",
+  "owner": { "name": "claude-go" },
+  "plugins": [
+    {
+      "name": "account-flow",
+      "source": "./plugin",
+      "description": "Account indicator and /accounts, /switch, /flow for sessions started by claude-go."
+    }
+  ]
+}

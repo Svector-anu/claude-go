@@ -1,0 +1,6 @@
+{
+  "name": "account-flow",
+  "version": "0.1.2",
+  "description": "Shows which claude-go account this session runs on, and adds /accounts, /switch and /flow. Talks to the claude-go controller; holds no credentials.",
+  "author": { "name": "claude-go" }
+}
