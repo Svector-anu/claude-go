@@ -51,6 +51,26 @@ ready.
 
 ![/flow pane](docs/images/pane.png)
 
+## why not just switch accounts yourself
+
+you can. if you rarely hit a limit, you don't need this. changing accounts in claude code means signing in
+again, which is a browser round trip, and it replaces the login you had. claude-go removes that and the
+babysitting around it:
+
+- **both accounts stay signed in.** each lives in its own config folder, so switching never opens a browser or
+  logs the other one out.
+- **it switches when a usage limit hits.** it stops claude and resumes the same session on the other account,
+  then sends one short message so claude carries on with the interrupted request. you don't retype anything.
+- **manual switching is quick.** `/switch second` moves your live session over in about 5 seconds, with the same
+  conversation, history and settings.
+- **one view of every account.** `/accounts` and the indicator show each account's 5h and 7d windows. only the
+  account you are on reports live usage, so the others show their last reading and how old it is.
+- **notes that follow you.** the optional project memory is shared across accounts and machines, and can be
+  encrypted.
+
+what it does not do: give you more quota, show another account's live usage, or change the terms you agreed to
+when you signed up. use it with accounts you own.
+
 ## how it works
 
 - **isolation.** each extra account has its own `CLAUDE_CONFIG_DIR` under `~/.claude-go/profiles/<name>`
