@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"claude-go/internal/availability"
+	"github.com/Svector-anu/claude-go/internal/availability"
 )
 
 var limitsNow = time.Date(2026, 10, 20, 12, 0, 0, 0, time.UTC)

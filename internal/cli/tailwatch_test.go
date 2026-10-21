@@ -9,9 +9,9 @@ import (
 	"testing"
 	"time"
 
-	"claude-go/internal/availability"
-	"claude-go/internal/history"
-	"claude-go/internal/ipc"
+	"github.com/Svector-anu/claude-go/internal/availability"
+	"github.com/Svector-anu/claude-go/internal/history"
+	"github.com/Svector-anu/claude-go/internal/ipc"
 )
 
 // harnessNow is the frozen clock every CLI test runs on.

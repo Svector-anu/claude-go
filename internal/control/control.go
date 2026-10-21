@@ -22,8 +22,8 @@ import (
 	"syscall"
 	"time"
 
-	"claude-go/internal/fsx"
-	"claude-go/internal/limits"
+	"github.com/Svector-anu/claude-go/internal/fsx"
+	"github.com/Svector-anu/claude-go/internal/limits"
 )
 
 const (

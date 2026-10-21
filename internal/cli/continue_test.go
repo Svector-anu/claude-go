@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"claude-go/internal/config"
-	"claude-go/internal/history"
+	"github.com/Svector-anu/claude-go/internal/config"
+	"github.com/Svector-anu/claude-go/internal/history"
 )
 
 func limitedRig(t *testing.T, configJSON string, runArgs ...string) *liveRig {

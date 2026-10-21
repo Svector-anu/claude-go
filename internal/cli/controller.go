@@ -8,12 +8,12 @@ import (
 	"strconv"
 	"time"
 
-	"claude-go/internal/availability"
-	"claude-go/internal/buildinfo"
-	"claude-go/internal/history"
-	"claude-go/internal/ipc"
-	"claude-go/internal/launcher"
-	"claude-go/internal/registry"
+	"github.com/Svector-anu/claude-go/internal/availability"
+	"github.com/Svector-anu/claude-go/internal/buildinfo"
+	"github.com/Svector-anu/claude-go/internal/history"
+	"github.com/Svector-anu/claude-go/internal/ipc"
+	"github.com/Svector-anu/claude-go/internal/launcher"
+	"github.com/Svector-anu/claude-go/internal/registry"
 )
 
 // controller answers the extension-facing API from the running session. It

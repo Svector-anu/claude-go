@@ -1,6 +1,6 @@
 VERSION ?= dev
 COMMIT  ?= $(shell git rev-parse --short HEAD 2>/dev/null || echo unknown)
-LDFLAGS := -X claude-go/internal/buildinfo.Version=$(VERSION) -X claude-go/internal/buildinfo.Commit=$(COMMIT)
+LDFLAGS := -X github.com/Svector-anu/claude-go/internal/buildinfo.Version=$(VERSION) -X github.com/Svector-anu/claude-go/internal/buildinfo.Commit=$(COMMIT)
 
 .PHONY: build test check mod-check
 build:

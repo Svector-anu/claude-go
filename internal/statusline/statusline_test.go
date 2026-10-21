@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"claude-go/internal/ipc"
+	"github.com/Svector-anu/claude-go/internal/ipc"
 )
 
 var now = time.Date(2026, 10, 20, 12, 0, 0, 0, time.UTC)

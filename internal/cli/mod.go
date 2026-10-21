@@ -8,10 +8,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"claude-go/integrations/claude-code"
-	"claude-go/internal/fsx"
-	"claude-go/internal/memory"
-	"claude-go/internal/modinstall"
+	"github.com/Svector-anu/claude-go/integrations/claude-code"
+	"github.com/Svector-anu/claude-go/internal/fsx"
+	"github.com/Svector-anu/claude-go/internal/memory"
+	"github.com/Svector-anu/claude-go/internal/modinstall"
 )
 
 // installMod puts the optional mod in claude-go's own state directory. Claude

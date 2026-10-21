@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"claude-go/internal/availability"
+	"github.com/Svector-anu/claude-go/internal/availability"
 )
 
 var windowNames = map[string]string{"five_hour": "5h", "seven_day": "7d", "spend_limit": "spend"}

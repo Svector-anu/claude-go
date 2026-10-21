@@ -11,8 +11,8 @@ import (
 	"testing"
 	"time"
 
-	"claude-go/internal/claudeargs"
-	"claude-go/internal/launcher"
+	"github.com/Svector-anu/claude-go/internal/claudeargs"
+	"github.com/Svector-anu/claude-go/internal/launcher"
 )
 
 type stubProc struct {

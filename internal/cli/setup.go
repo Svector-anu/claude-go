@@ -9,13 +9,13 @@ import (
 	"path/filepath"
 	"strings"
 
-	"claude-go/internal/accounts"
-	"claude-go/internal/claudebin"
-	"claude-go/internal/fsx"
-	"claude-go/internal/hookinstall"
-	"claude-go/internal/launcher"
-	"claude-go/internal/registry"
-	"claude-go/internal/shellrc"
+	"github.com/Svector-anu/claude-go/internal/accounts"
+	"github.com/Svector-anu/claude-go/internal/claudebin"
+	"github.com/Svector-anu/claude-go/internal/fsx"
+	"github.com/Svector-anu/claude-go/internal/hookinstall"
+	"github.com/Svector-anu/claude-go/internal/launcher"
+	"github.com/Svector-anu/claude-go/internal/registry"
+	"github.com/Svector-anu/claude-go/internal/shellrc"
 )
 
 const (

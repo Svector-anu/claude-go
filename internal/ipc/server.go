@@ -15,7 +15,7 @@ import (
 	"sync"
 	"time"
 
-	"claude-go/internal/registry"
+	"github.com/Svector-anu/claude-go/internal/registry"
 )
 
 const (

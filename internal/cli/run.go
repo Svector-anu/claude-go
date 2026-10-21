@@ -7,15 +7,15 @@ import (
 	"strings"
 	"time"
 
-	"claude-go/internal/availability"
-	"claude-go/internal/claudeargs"
-	"claude-go/internal/claudebin"
-	"claude-go/internal/config"
-	"claude-go/internal/control"
-	"claude-go/internal/launcher"
-	"claude-go/internal/limits"
-	"claude-go/internal/registry"
-	"claude-go/internal/transcript"
+	"github.com/Svector-anu/claude-go/internal/availability"
+	"github.com/Svector-anu/claude-go/internal/claudeargs"
+	"github.com/Svector-anu/claude-go/internal/claudebin"
+	"github.com/Svector-anu/claude-go/internal/config"
+	"github.com/Svector-anu/claude-go/internal/control"
+	"github.com/Svector-anu/claude-go/internal/launcher"
+	"github.com/Svector-anu/claude-go/internal/limits"
+	"github.com/Svector-anu/claude-go/internal/registry"
+	"github.com/Svector-anu/claude-go/internal/transcript"
 )
 
 const (

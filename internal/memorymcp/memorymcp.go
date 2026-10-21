@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"strings"
 
-	"claude-go/internal/mcp"
-	"claude-go/internal/memory"
+	"github.com/Svector-anu/claude-go/internal/mcp"
+	"github.com/Svector-anu/claude-go/internal/memory"
 )
 
 const instructions = `claude-go project memory: short notes that persist across sessions, accounts and machines.

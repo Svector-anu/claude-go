@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"claude-go/internal/fsx"
+	"github.com/Svector-anu/claude-go/internal/fsx"
 )
 
 const (

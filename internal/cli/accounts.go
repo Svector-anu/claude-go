@@ -8,11 +8,11 @@ import (
 	"strings"
 	"text/tabwriter"
 
-	"claude-go/internal/accounts"
-	"claude-go/internal/availability"
-	"claude-go/internal/claudebin"
-	"claude-go/internal/launcher"
-	"claude-go/internal/registry"
+	"github.com/Svector-anu/claude-go/internal/accounts"
+	"github.com/Svector-anu/claude-go/internal/availability"
+	"github.com/Svector-anu/claude-go/internal/claudebin"
+	"github.com/Svector-anu/claude-go/internal/launcher"
+	"github.com/Svector-anu/claude-go/internal/registry"
 )
 
 const accountsUsage = `Usage:

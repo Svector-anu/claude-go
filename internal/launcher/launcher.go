@@ -20,10 +20,10 @@ import (
 	"syscall"
 	"time"
 
-	"claude-go/internal/claudeargs"
-	"claude-go/internal/control"
-	"claude-go/internal/history"
-	"claude-go/internal/modinstall"
+	"github.com/Svector-anu/claude-go/internal/claudeargs"
+	"github.com/Svector-anu/claude-go/internal/control"
+	"github.com/Svector-anu/claude-go/internal/history"
+	"github.com/Svector-anu/claude-go/internal/modinstall"
 )
 
 const (

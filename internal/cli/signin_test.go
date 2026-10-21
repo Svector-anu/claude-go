@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"claude-go/internal/registry"
+	"github.com/Svector-anu/claude-go/internal/registry"
 )
 
 func TestAddWithLoginSignsInUnderTheNewProfileOnly(t *testing.T) {

@@ -27,7 +27,7 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"claude-go/internal/fsx"
+	"github.com/Svector-anu/claude-go/internal/fsx"
 )
 
 const (

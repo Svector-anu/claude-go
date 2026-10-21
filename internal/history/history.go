@@ -12,7 +12,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"claude-go/internal/fsx"
+	"github.com/Svector-anu/claude-go/internal/fsx"
 )
 
 const (

@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"claude-go/internal/memory"
+	"github.com/Svector-anu/claude-go/internal/memory"
 )
 
 func (h *harness) gitProject(t *testing.T, remote string) string {

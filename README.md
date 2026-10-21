@@ -7,6 +7,14 @@ one line. written in go, stdlib only. no tokens ever pass through it.
 not a proxy, not a credential manager. every account signs in through the real `claude auth login`
 and claude-go only decides which one runs.
 
+## install
+
+```
+go install github.com/Svector-anu/claude-go/cmd/claude-go@latest
+```
+
+needs go 1.26. macos and linux. then:
+
 ```
 claude-go setup                          # once
 claude-go accounts add personal --login  # once per extra account (opens a browser)

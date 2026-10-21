@@ -7,10 +7,10 @@ import (
 	"strings"
 	"time"
 
-	"claude-go/internal/history"
-	"claude-go/internal/ipc"
-	"claude-go/internal/launcher"
-	"claude-go/internal/statusline"
+	"github.com/Svector-anu/claude-go/internal/history"
+	"github.com/Svector-anu/claude-go/internal/ipc"
+	"github.com/Svector-anu/claude-go/internal/launcher"
+	"github.com/Svector-anu/claude-go/internal/statusline"
 )
 
 const (

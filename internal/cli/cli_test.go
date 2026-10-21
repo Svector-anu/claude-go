@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"claude-go/internal/buildinfo"
+	"github.com/Svector-anu/claude-go/internal/buildinfo"
 )
 
 type fakeRunner struct {

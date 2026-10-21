@@ -11,8 +11,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"claude-go/internal/claudejson"
-	"claude-go/internal/registry"
+	"github.com/Svector-anu/claude-go/internal/claudejson"
+	"github.com/Svector-anu/claude-go/internal/registry"
 )
 
 const dirMode os.FileMode = 0o700

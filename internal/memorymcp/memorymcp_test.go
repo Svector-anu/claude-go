@@ -12,7 +12,7 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"claude-go/internal/memory"
+	"github.com/Svector-anu/claude-go/internal/memory"
 )
 
 func repo(t *testing.T, remote string) string {

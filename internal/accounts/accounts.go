@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"time"
 
-	"claude-go/internal/paths"
-	"claude-go/internal/profile"
-	"claude-go/internal/registry"
+	"github.com/Svector-anu/claude-go/internal/paths"
+	"github.com/Svector-anu/claude-go/internal/profile"
+	"github.com/Svector-anu/claude-go/internal/registry"
 )
 
 var (

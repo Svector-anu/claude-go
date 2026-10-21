@@ -8,16 +8,16 @@ import (
 	"os"
 	"time"
 
-	"claude-go/internal/accounts"
-	"claude-go/internal/availability"
-	"claude-go/internal/buildinfo"
-	"claude-go/internal/claudebin"
-	"claude-go/internal/config"
-	"claude-go/internal/control"
-	"claude-go/internal/hookinstall"
-	"claude-go/internal/launcher"
-	"claude-go/internal/paths"
-	"claude-go/internal/registry"
+	"github.com/Svector-anu/claude-go/internal/accounts"
+	"github.com/Svector-anu/claude-go/internal/availability"
+	"github.com/Svector-anu/claude-go/internal/buildinfo"
+	"github.com/Svector-anu/claude-go/internal/claudebin"
+	"github.com/Svector-anu/claude-go/internal/config"
+	"github.com/Svector-anu/claude-go/internal/control"
+	"github.com/Svector-anu/claude-go/internal/hookinstall"
+	"github.com/Svector-anu/claude-go/internal/launcher"
+	"github.com/Svector-anu/claude-go/internal/paths"
+	"github.com/Svector-anu/claude-go/internal/registry"
 )
 
 const (

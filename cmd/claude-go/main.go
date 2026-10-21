@@ -10,9 +10,9 @@ import (
 	"syscall"
 	"time"
 
-	"claude-go/internal/claudebin"
-	"claude-go/internal/cli"
-	"claude-go/internal/launcher"
+	"github.com/Svector-anu/claude-go/internal/claudebin"
+	"github.com/Svector-anu/claude-go/internal/cli"
+	"github.com/Svector-anu/claude-go/internal/launcher"
 )
 
 func main() {

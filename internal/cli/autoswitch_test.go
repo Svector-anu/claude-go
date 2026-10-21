@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"claude-go/internal/availability"
+	"github.com/Svector-anu/claude-go/internal/availability"
 )
 
 // syncBuffer lets the test read what the session goroutine wrote.

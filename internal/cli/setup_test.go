@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"claude-go/internal/registry"
+	"github.com/Svector-anu/claude-go/internal/registry"
 )
 
 // identityRunner answers `claude auth status` per profile; unknown profiles are logged out.

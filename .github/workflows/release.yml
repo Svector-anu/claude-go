@@ -1,0 +1,35 @@
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: test
+        run: go test ./...
+      - name: build
+        run: |
+          set -eu
+          mkdir dist
+          for target in darwin/arm64 darwin/amd64 linux/arm64 linux/amd64; do
+            os="${target%/*}"; arch="${target#*/}"
+            CGO_ENABLED=0 GOOS="$os" GOARCH="$arch" go build -trimpath \
+              -ldflags "-s -w -X github.com/Svector-anu/claude-go/internal/buildinfo.Version=${GITHUB_REF_NAME} -X github.com/Svector-anu/claude-go/internal/buildinfo.Commit=${GITHUB_SHA::7}" \
+              -o claude-go ./cmd/claude-go
+            tar -czf "dist/claude-go_${os}_${arch}.tar.gz" claude-go
+          done
+          (cd dist && sha256sum *.tar.gz > checksums.txt)
+      - name: publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" dist/* --generate-notes --title "$GITHUB_REF_NAME"

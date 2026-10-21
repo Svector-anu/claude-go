@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"claude-go/internal/control"
-	"claude-go/internal/limits"
+	"github.com/Svector-anu/claude-go/internal/control"
+	"github.com/Svector-anu/claude-go/internal/limits"
 )
 
 func (h *harness) hook(t *testing.T, wrapped, payload string, args ...string) int {

@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"claude-go/internal/registry"
+	"github.com/Svector-anu/claude-go/internal/registry"
 )
 
 var t0 = time.Date(2026, 10, 20, 12, 0, 0, 0, time.UTC)

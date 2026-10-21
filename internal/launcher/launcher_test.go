@@ -15,9 +15,9 @@ import (
 	"testing"
 	"time"
 
-	"claude-go/internal/claudeargs"
-	"claude-go/internal/control"
-	"claude-go/internal/limits"
+	"github.com/Svector-anu/claude-go/internal/claudeargs"
+	"github.com/Svector-anu/claude-go/internal/control"
+	"github.com/Svector-anu/claude-go/internal/limits"
 )
 
 const sid = "11111111-2222-4333-8444-555555555555"

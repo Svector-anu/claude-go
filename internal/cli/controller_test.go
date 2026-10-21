@@ -11,9 +11,9 @@ import (
 	"testing"
 	"time"
 
-	"claude-go/internal/availability"
-	"claude-go/internal/ipc"
-	"claude-go/internal/launcher"
+	"github.com/Svector-anu/claude-go/internal/availability"
+	"github.com/Svector-anu/claude-go/internal/ipc"
+	"github.com/Svector-anu/claude-go/internal/launcher"
 )
 
 // newShortHarness keeps the state directory short enough for a Unix socket path.

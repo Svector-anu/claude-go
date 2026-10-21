@@ -16,7 +16,7 @@ import (
 	"io/fs"
 	"os"
 
-	"claude-go/internal/fsx"
+	"github.com/Svector-anu/claude-go/internal/fsx"
 )
 
 // topLevel are the flags copied when the profile lacks them. Nothing about

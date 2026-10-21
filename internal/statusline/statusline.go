@@ -12,7 +12,7 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"claude-go/internal/ipc"
+	"github.com/Svector-anu/claude-go/internal/ipc"
 )
 
 // Input is the subset of the statusLine stdin JSON claude-go reads.

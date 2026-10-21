@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
-	"claude-go/internal/paths"
-	"claude-go/internal/registry"
+	"github.com/Svector-anu/claude-go/internal/paths"
+	"github.com/Svector-anu/claude-go/internal/registry"
 )
 
 func newService(t *testing.T) Service {

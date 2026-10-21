@@ -7,10 +7,10 @@ import (
 	"strconv"
 	"time"
 
-	"claude-go/internal/control"
-	"claude-go/internal/hookinstall"
-	"claude-go/internal/launcher"
-	"claude-go/internal/limits"
+	"github.com/Svector-anu/claude-go/internal/control"
+	"github.com/Svector-anu/claude-go/internal/hookinstall"
+	"github.com/Svector-anu/claude-go/internal/launcher"
+	"github.com/Svector-anu/claude-go/internal/limits"
 )
 
 const maxHookPayload = 1 << 20

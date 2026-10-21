@@ -10,11 +10,11 @@ import (
 	"text/tabwriter"
 	"unicode/utf8"
 
-	"claude-go/internal/buildinfo"
-	"claude-go/internal/config"
-	"claude-go/internal/mcp"
-	"claude-go/internal/memory"
-	"claude-go/internal/memorymcp"
+	"github.com/Svector-anu/claude-go/internal/buildinfo"
+	"github.com/Svector-anu/claude-go/internal/config"
+	"github.com/Svector-anu/claude-go/internal/mcp"
+	"github.com/Svector-anu/claude-go/internal/memory"
+	"github.com/Svector-anu/claude-go/internal/memorymcp"
 )
 
 const memoryUsage = `Usage:

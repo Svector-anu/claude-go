@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"claude-go/internal/ipc"
+	"github.com/Svector-anu/claude-go/internal/ipc"
 )
 
 type statusCtrl struct {
