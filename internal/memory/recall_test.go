@@ -156,3 +156,50 @@ func TestFormatFramesNotesAsDataAndCannotBeBrokenOutOf(t *testing.T) {
 		t.Errorf("empty = %q", got)
 	}
 }
+
+func TestRecallMatchesWordFormsAndWordStarts(t *testing.T) {
+	s := open(t)
+	mustRemember(t, s, GlobalScope, "ci:deploy", "we deployed through github actions", "ci")
+	mustRemember(t, s, GlobalScope, "auth:flow", "authentication uses oauth", "login")
+	cases := map[string]string{
+		"deploying": "ci:deploy", // deploying / deployed
+		"deploys":   "ci:deploy", // plural
+		"auth":      "auth:flow", // start of "authentication"
+		"actions":   "ci:deploy", // plural against a plural
+		"logins":    "auth:flow", // plural query, singular tag
+	}
+	for topic, want := range cases {
+		if got := mustRecall(t, s, Query{Topic: topic}); len(got) == 0 || got[0].Key != want {
+			t.Errorf("%q -> %v, want %q first", topic, keysOf(got), want)
+		}
+	}
+}
+
+func TestAKeyOrTagHitOutranksOneMentionInALongValue(t *testing.T) {
+	s := open(t)
+	mustRemember(t, s, GlobalScope, "misc:notes", strings.Repeat("filler words about nothing ", 20)+"mentions redis once")
+	mustRemember(t, s, GlobalScope, "cache:redis", "primary cache", "redis")
+	if got := mustRecall(t, s, Query{Topic: "redis"}); got[0].Key != "cache:redis" {
+		t.Errorf("order = %v", keysOf(got))
+	}
+}
+
+func TestAFocusedNoteBeatsALongOneWithTheSameMention(t *testing.T) {
+	s := open(t)
+	mustRemember(t, s, GlobalScope, "long:one", strings.Repeat("unrelated sentence here. ", 40)+"uses terraform")
+	mustRemember(t, s, GlobalScope, "short:one", "uses terraform")
+	if got := mustRecall(t, s, Query{Topic: "terraform"}); got[0].Key != "short:one" {
+		t.Errorf("order = %v", keysOf(got))
+	}
+}
+
+func TestARareTermCountsMoreThanACommonOne(t *testing.T) {
+	s := open(t)
+	for i := 0; i < 6; i++ {
+		mustRemember(t, s, GlobalScope, fmt.Sprintf("svc:%d", i), "service config for the api")
+	}
+	mustRemember(t, s, GlobalScope, "svc:special", "service uses kafka")
+	if got := mustRecall(t, s, Query{Topic: "service kafka"}); got[0].Key != "svc:special" {
+		t.Errorf("order = %v", keysOf(got))
+	}
+}

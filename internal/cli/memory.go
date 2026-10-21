@@ -1,11 +1,14 @@
 package cli
 
 import (
+	"bytes"
 	"context"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"text/tabwriter"
 	"unicode/utf8"
@@ -23,6 +26,9 @@ const memoryUsage = `Usage:
   claude-go memory export FILE                     bundle every note, to move or back up
   claude-go memory import FILE                     merge a bundle (safe to repeat)
   claude-go memory path                            where the notes are stored
+  claude-go memory encrypt                         encrypt the notes on this machine (key kept in the keychain)
+  claude-go memory decrypt                         write them as plain text again
+  claude-go memory key export FILE | import FILE   move the key to another machine (a secret: delete the file after)
 `
 
 // memoryDir is where notes live: memory_dir from config, else under the state directory.
@@ -50,7 +56,38 @@ func (a *app) memoryStore() (*memory.Store, error) {
 		return nil, err
 	}
 	s.Now = a.env.Now
+	key, err := a.keyStore().Load()
+	switch {
+	case errors.Is(err, memory.ErrNoKey):
+	case err != nil:
+		// Writing plain text because the key was unreadable would defeat encryption.
+		return nil, fmt.Errorf("memory is encrypted but its key cannot be read: %w", err)
+	default:
+		if s.Cipher, err = memory.NewCipher(key); err != nil {
+			return nil, err
+		}
+	}
 	return s, nil
+}
+
+// keyStore is where the memory key lives.
+func (a *app) keyStore() memory.KeyStore {
+	if a.env.Keys != nil {
+		return a.env.Keys
+	}
+	if runtime.GOOS == "darwin" {
+		if _, err := os.Stat("/usr/bin/security"); err == nil {
+			return memory.NewKeychainKeyStore("claude-go-memory", "key")
+		}
+	}
+	return memory.FileKeyStore{Path: filepath.Join(a.layout.Root, "memory.key")}
+}
+
+// warnLocked tells the person when notes exist that this machine cannot read.
+func (a *app) warnLocked(store *memory.Store) {
+	if n, err := store.Locked(); err == nil && n > 0 {
+		fmt.Fprintf(a.env.Stderr, "%d encrypted note line(s) cannot be read here: this machine has no matching key. Run `claude-go memory key import FILE` with a key exported from the machine that wrote them.\n", n)
+	}
 }
 
 // runMCPMemory serves the memory tools over stdio. Stdout carries protocol
@@ -97,6 +134,12 @@ func runMemory(args []string, env Env) int {
 		return a.memoryExport(args[1:])
 	case "import":
 		return a.memoryImport(args[1:])
+	case "encrypt":
+		return a.memoryEncrypt()
+	case "decrypt":
+		return a.memoryDecrypt()
+	case "key":
+		return a.memoryKey(args[1:])
 	default:
 		fmt.Fprintf(env.Stderr, "claude-go memory: unknown subcommand %q\n\n%s", args[0], memoryUsage)
 		return exitUsage
@@ -140,6 +183,7 @@ func (a *app) memoryList(args []string) int {
 	if err != nil {
 		return fail(a.env, err)
 	}
+	defer a.warnLocked(store)
 	if len(facts) == 0 {
 		fmt.Fprintln(a.env.Stdout, "No notes saved yet.")
 		return exitOK
@@ -226,6 +270,9 @@ func (a *app) memoryExport(args []string) int {
 		return fail(a.env, err)
 	}
 	fmt.Fprintf(a.env.Stdout, "Exported %d entries to %s\n", n, args[0])
+	if store.Cipher != nil {
+		fmt.Fprintln(a.env.Stdout, "Note: the export is plain text, even though your notes are encrypted. Keep it private and delete it after use.")
+	}
 	return exitOK
 }
 
@@ -251,5 +298,108 @@ func (a *app) memoryImport(args []string) int {
 	if res.Rejected > 0 {
 		return exitFailure
 	}
+	return exitOK
+}
+
+func (a *app) memoryEncrypt() int {
+	store, err := a.memoryStore()
+	if err != nil {
+		return fail(a.env, err)
+	}
+	ks := a.keyStore()
+	if store.Cipher == nil {
+		key, err := memory.GenerateKey()
+		if err != nil {
+			return fail(a.env, err)
+		}
+		if err := ks.Save(key); err != nil {
+			return fail(a.env, err)
+		}
+		if store.Cipher, err = memory.NewCipher(key); err != nil {
+			return fail(a.env, err)
+		}
+	}
+	if err := store.Rewrite(store.Cipher); err != nil {
+		return fail(a.env, err)
+	}
+	fmt.Fprintln(a.env.Stdout, "Your notes on this machine are encrypted. New notes are encrypted as they are saved.")
+	fmt.Fprintf(a.env.Stdout, "The key is kept in %s, never in the notes folder.\n", a.keyHome())
+	fmt.Fprintln(a.env.Stdout, "To read them on another machine: claude-go memory key export FILE, then claude-go memory key import FILE there.")
+	return exitOK
+}
+
+func (a *app) keyHome() string {
+	if _, ok := a.keyStore().(memory.FileKeyStore); ok {
+		return a.keyStore().(memory.FileKeyStore).Path + " (readable only by you)"
+	}
+	return "the macOS login keychain"
+}
+
+func (a *app) memoryDecrypt() int {
+	store, err := a.memoryStore()
+	if err != nil {
+		return fail(a.env, err)
+	}
+	if store.Cipher == nil {
+		fmt.Fprintln(a.env.Stdout, "Notes are not encrypted on this machine; nothing to do.")
+		return exitOK
+	}
+	if err := store.Rewrite(nil); err != nil {
+		return fail(a.env, err)
+	}
+	if n, err := store.Locked(); err == nil && n > 0 {
+		fmt.Fprintf(a.env.Stdout, "Notes written by this machine are plain text again. The key was kept: %d encrypted line(s) from other machines still need it.\n", n)
+		return exitOK
+	}
+	if err := a.keyStore().Delete(); err != nil {
+		return fail(a.env, err)
+	}
+	fmt.Fprintln(a.env.Stdout, "Notes are plain text again and the key was removed.")
+	return exitOK
+}
+
+func (a *app) memoryKey(args []string) int {
+	if len(args) != 2 || (args[0] != "export" && args[0] != "import") {
+		fmt.Fprint(a.env.Stderr, memoryUsage)
+		return exitUsage
+	}
+	ks := a.keyStore()
+	if args[0] == "export" {
+		key, err := ks.Load()
+		if errors.Is(err, memory.ErrNoKey) {
+			return fail(a.env, errors.New("notes are not encrypted on this machine, so there is no key to export"))
+		}
+		if err != nil {
+			return fail(a.env, err)
+		}
+		f, err := os.OpenFile(args[1], os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0o600)
+		if err != nil {
+			return fail(a.env, fmt.Errorf("cannot create %s (it must not already exist): %w", args[1], err))
+		}
+		_, werr := fmt.Fprintln(f, hex.EncodeToString(key))
+		if cerr := f.Close(); werr == nil {
+			werr = cerr
+		}
+		if werr != nil {
+			return fail(a.env, werr)
+		}
+		fmt.Fprintf(a.env.Stdout, "Key written to %s. Anyone with this file can read your notes: move it to the other machine privately, then delete it.\n", args[1])
+		return exitOK
+	}
+	data, err := os.ReadFile(args[1])
+	if err != nil {
+		return fail(a.env, err)
+	}
+	key, err := hex.DecodeString(strings.TrimSpace(string(data)))
+	if err != nil || len(key) != memory.KeyLen {
+		return fail(a.env, fmt.Errorf("%s does not hold a memory key", args[1]))
+	}
+	if cur, err := ks.Load(); err == nil && !bytes.Equal(cur, key) {
+		return fail(a.env, errors.New("a different memory key is already set up here; run `claude-go memory decrypt` first"))
+	}
+	if err := ks.Save(key); err != nil {
+		return fail(a.env, err)
+	}
+	fmt.Fprintln(a.env.Stdout, "Key imported. Notes encrypted with it can now be read here; new notes are encrypted too. Delete the key file now.")
 	return exitOK
 }

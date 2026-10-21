@@ -10,7 +10,6 @@ import (
 
 	"github.com/Svector-anu/claude-go/integrations/claude-code"
 	"github.com/Svector-anu/claude-go/internal/fsx"
-	"github.com/Svector-anu/claude-go/internal/memory"
 	"github.com/Svector-anu/claude-go/internal/modinstall"
 )
 
@@ -134,7 +133,7 @@ func (a *app) describeMemory() string {
 	if err != nil {
 		return "on, but " + err.Error()
 	}
-	store, err := memory.Open(dir)
+	store, err := a.memoryStore()
 	if err != nil {
 		return "on, but " + err.Error()
 	}
@@ -142,5 +141,13 @@ func (a *app) describeMemory() string {
 	if err != nil {
 		return "on, but " + err.Error()
 	}
-	return fmt.Sprintf("on, %d note(s) in %s", len(facts), dir)
+	state := ""
+	if store.Cipher != nil {
+		state = ", encrypted"
+	}
+	locked, _ := store.Locked()
+	if locked > 0 {
+		state += fmt.Sprintf(", %d unreadable (no key)", locked)
+	}
+	return fmt.Sprintf("on, %d note(s) in %s%s", len(facts), dir, state)
 }

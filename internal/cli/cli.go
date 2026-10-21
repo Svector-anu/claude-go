@@ -16,6 +16,7 @@ import (
 	"github.com/Svector-anu/claude-go/internal/control"
 	"github.com/Svector-anu/claude-go/internal/hookinstall"
 	"github.com/Svector-anu/claude-go/internal/launcher"
+	"github.com/Svector-anu/claude-go/internal/memory"
 	"github.com/Svector-anu/claude-go/internal/paths"
 	"github.com/Svector-anu/claude-go/internal/registry"
 )
@@ -50,6 +51,9 @@ type Env struct {
 	// Signals subscribes to the signals the wrapper forwards to Claude and
 	// returns a function that unsubscribes.
 	Signals func() (<-chan os.Signal, func())
+	// Keys holds the optional memory encryption key. Nil means the platform
+	// default: the macOS login keychain, else a private file in the state directory.
+	Keys memory.KeyStore
 }
 
 const usageText = `claude-go - use several Claude Code accounts as one, and keep your session when one runs out

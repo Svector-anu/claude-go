@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/Svector-anu/claude-go/internal/buildinfo"
+	"github.com/Svector-anu/claude-go/internal/memory"
 )
 
 type fakeRunner struct {
@@ -60,6 +61,7 @@ func newHarness(t *testing.T) *harness {
 		Getpid:     os.Getpid,
 		Starter:    &stubStarter{},
 		Signals:    func() (<-chan os.Signal, func()) { return make(chan os.Signal), func() {} },
+		Keys:       memory.FileKeyStore{Path: filepath.Join(h.home, "memory.key")},
 	}
 	return h
 }

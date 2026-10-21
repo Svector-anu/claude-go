@@ -94,7 +94,11 @@ func (a Op) newer(b Op) bool {
 	return a.ID > b.ID
 }
 
-type fileState struct{ offset int64 }
+type fileState struct {
+	offset int64
+	// locked counts encrypted lines that could not be read (no key, wrong key or tampered).
+	locked int
+}
 
 // Store reads and appends the memory log in one directory. It is safe for
 // concurrent use and for several processes sharing the directory.
@@ -104,6 +108,9 @@ type Store struct {
 	Now     func() time.Time
 	// Max caps live facts; zero means MaxFacts.
 	Max int
+	// Cipher, when set, seals everything this store writes and opens sealed
+	// lines it reads. Lines written without one stay readable.
+	Cipher *Cipher
 
 	mu    sync.Mutex
 	files map[string]*fileState
@@ -308,12 +315,48 @@ func (s *Store) readFile(path string) error {
 		if len(line) > maxLineBytes {
 			continue
 		}
-		var op Op
-		if json.Unmarshal(bytes.TrimSpace(line), &op) == nil && validOp(op) == nil {
+		op, sealed, ok := s.decode(line)
+		if sealed && !ok {
+			st.locked++
+		}
+		if ok {
 			s.apply(op)
 		}
 	}
 	return nil
+}
+
+// decode reads one log line. sealed says it was an encrypted line; ok says it
+// yielded a valid operation.
+func (s *Store) decode(line []byte) (op Op, sealed, ok bool) {
+	raw := bytes.TrimSpace(line)
+	if isSealed(raw) {
+		if s.Cipher == nil {
+			return Op{}, true, false
+		}
+		plain, err := s.Cipher.Open(raw)
+		if err != nil {
+			return Op{}, true, false
+		}
+		raw = plain
+		sealed = true
+	}
+	if json.Unmarshal(raw, &op) != nil || validOp(op) != nil {
+		return Op{}, sealed, false
+	}
+	return op, sealed, true
+}
+
+// encode renders an operation as one log line, sealed when c is set.
+func encode(op Op, c *Cipher) ([]byte, error) {
+	line, err := json.Marshal(op)
+	if err != nil {
+		return nil, fmt.Errorf("encode operation: %w", err)
+	}
+	if c == nil {
+		return line, nil
+	}
+	return c.Seal(line)
 }
 
 // validOp is applied to everything read from disk, including files written by
@@ -374,9 +417,9 @@ func (s *Store) withLock(fn func() error) error {
 }
 
 func (s *Store) appendOp(op Op) error {
-	line, err := json.Marshal(op)
+	line, err := encode(op, s.Cipher)
 	if err != nil {
-		return fmt.Errorf("encode operation: %w", err)
+		return err
 	}
 	f, err := os.OpenFile(s.ownFile(), os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0o600)
 	if err != nil {
@@ -534,9 +577,9 @@ func (s *Store) maybeCompact() error {
 	sort.Slice(keep, func(i, j int) bool { return keep[j].newer(keep[i]) })
 	var buf bytes.Buffer
 	for _, op := range keep {
-		line, err := json.Marshal(op)
+		line, err := encode(op, s.Cipher)
 		if err != nil {
-			return fmt.Errorf("encode operation: %w", err)
+			return err
 		}
 		buf.Write(line)
 		buf.WriteByte('\n')
@@ -601,7 +644,10 @@ func (s *Store) Import(r io.Reader) (ImportResult, error) {
 				res.Skipped++
 				continue
 			}
-			line, _ := json.Marshal(op)
+			line, err := encode(op, s.Cipher)
+			if err != nil {
+				return err
+			}
 			buf.Write(line)
 			buf.WriteByte('\n')
 			applied = append(applied, op)
@@ -631,4 +677,61 @@ func (s *Store) Import(r io.Reader) (ImportResult, error) {
 		return nil
 	})
 	return res, err
+}
+
+// Locked reports how many encrypted lines in the folder could not be read: no
+// key on this machine, a different key, or a line that was changed.
+func (s *Store) Locked() (int, error) {
+	n := 0
+	err := s.withLock(func() error {
+		for _, st := range s.files {
+			n += st.locked
+		}
+		return nil
+	})
+	return n, err
+}
+
+// Rewrite re-encodes this machine's own files (its log and its imports) with
+// target: sealed with a Cipher, or plain when target is nil. Other machines'
+// files are not touched. Every line is kept; nothing is compacted. A sealed
+// line that cannot be opened with the current Cipher stops the rewrite, so no
+// note is lost. On success the store uses target from then on.
+func (s *Store) Rewrite(target *Cipher) error {
+	return s.withLock(func() error {
+		for _, p := range []string{s.ownFile(), filepath.Join(s.Dir, importFileName)} {
+			data, err := os.ReadFile(p)
+			if errors.Is(err, fs.ErrNotExist) {
+				continue
+			}
+			if err != nil {
+				return fmt.Errorf("read %s: %w", p, err)
+			}
+			var out bytes.Buffer
+			for _, line := range bytes.Split(data, []byte{'\n'}) {
+				if len(bytes.TrimSpace(line)) == 0 {
+					continue
+				}
+				op, sealed, ok := s.decode(line)
+				if !ok {
+					if sealed {
+						return fmt.Errorf("%s has an encrypted line this machine's key cannot open; nothing was changed", p)
+					}
+					continue // a damaged plain line was already ignored when reading
+				}
+				enc, err := encode(op, target)
+				if err != nil {
+					return err
+				}
+				out.Write(enc)
+				out.WriteByte('\n')
+			}
+			if err := fsx.WriteFileAtomic(p, out.Bytes(), 0o600); err != nil {
+				return err
+			}
+		}
+		s.Cipher = target
+		s.reset()
+		return s.refresh()
+	})
 }

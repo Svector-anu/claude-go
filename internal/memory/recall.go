@@ -34,10 +34,14 @@ var stopwords = map[string]bool{
 	"does": true, "did": true, "you": true, "your": true, "from": true, "have": true, "has": true,
 }
 
+func tokenize(text string) []string {
+	return strings.FieldsFunc(strings.ToLower(text), func(r rune) bool { return !unicode.IsLetter(r) && !unicode.IsDigit(r) })
+}
+
 func keywords(topic string) []string {
 	seen := map[string]bool{}
 	var out []string
-	for _, w := range strings.FieldsFunc(strings.ToLower(topic), func(r rune) bool { return !unicode.IsLetter(r) && !unicode.IsDigit(r) }) {
+	for _, w := range tokenize(topic) {
 		if len(w) < 2 || stopwords[w] || seen[w] {
 			continue
 		}
@@ -47,36 +51,121 @@ func keywords(topic string) []string {
 	return out
 }
 
-func containsTerm(haystack string, term string) bool { return strings.Contains(haystack, term) }
+// stem strips one common English suffix so "deploying", "deployed" and
+// "deploys" meet. It is deliberately crude: a wrong merge only widens a match.
+func stem(w string) string {
+	for _, suf := range []string{"ing", "ed", "es", "ly", "s"} {
+		if len(w) >= len(suf)+3 && strings.HasSuffix(w, suf) {
+			return strings.TrimSuffix(w, suf)
+		}
+	}
+	return w
+}
 
-// score ranks a fact for a topic. relevant is false when nothing in the fact
-// matches the topic at all (such facts are not returned for a non-empty topic).
-func score(f Fact, terms []string, project string, now time.Time) (s float64, relevant bool) {
-	key := strings.ToLower(f.Key)
-	value := strings.ToLower(f.Value)
-	tagHits, keyHits, valueHits := 0, 0, 0
-	for _, t := range terms {
-		for _, tag := range f.Tags {
-			if tag == t || strings.Contains(tag, t) || strings.Contains(t, tag) {
-				tagHits++
-				break
+// termMatches reports whether a stemmed token answers a stemmed query term:
+// equal, or one is the start of the other once both are at least four letters
+// ("auth" finds "authentication").
+func termMatches(token, term string) bool {
+	if token == term {
+		return true
+	}
+	return len(token) >= 4 && len(term) >= 4 && (strings.HasPrefix(token, term) || strings.HasPrefix(term, token))
+}
+
+// BM25 parameters and how much more a hit in a key or tag counts than one in the value.
+const (
+	bm25K1       = 1.2
+	bm25B        = 0.75
+	fieldWeight  = 3.0 // key and tags
+	bm25Scale    = 4.0
+	recencyBonus = 8.0
+	projectBonus = 3.0
+)
+
+// doc is a fact prepared for ranking: stemmed tokens with the weight of the
+// field each came from.
+type doc struct {
+	tokens  []string
+	weights []float64
+	length  float64
+}
+
+func newDoc(f Fact) doc {
+	var d doc
+	add := func(text string, w float64) {
+		for _, tok := range tokenize(text) {
+			d.tokens = append(d.tokens, stem(tok))
+			d.weights = append(d.weights, w)
+			d.length += w
+		}
+	}
+	add(f.Key, fieldWeight)
+	add(strings.Join(f.Tags, " "), fieldWeight)
+	add(f.Value, 1)
+	return d
+}
+
+// termFreq is the weighted number of tokens in d that answer term.
+func (d doc) termFreq(term string) float64 {
+	tf := 0.0
+	for i, tok := range d.tokens {
+		if termMatches(tok, term) {
+			tf += d.weights[i]
+		}
+	}
+	return tf
+}
+
+// rank scores facts for a topic with BM25 over key, tags and value (key and tags
+// count more), then adds a recency bonus and a bonus for the current project's
+// own notes. relevant[i] is false when nothing in fact i matches any term.
+func rank(facts []Fact, terms []string, project string, now time.Time) (scores []float64, relevant []bool) {
+	scores = make([]float64, len(facts))
+	relevant = make([]bool, len(facts))
+	docs := make([]doc, len(facts))
+	totalLen := 0.0
+	for i, f := range facts {
+		docs[i] = newDoc(f)
+		totalLen += docs[i].length
+	}
+	stemmed := make([]string, len(terms))
+	for i, t := range terms {
+		stemmed[i] = stem(t)
+	}
+	avgLen := 1.0
+	if len(facts) > 0 && totalLen > 0 {
+		avgLen = totalLen / float64(len(facts))
+	}
+	n := float64(len(facts))
+	for _, term := range stemmed {
+		tfs := make([]float64, len(docs))
+		df := 0.0
+		for i, d := range docs {
+			if tfs[i] = d.termFreq(term); tfs[i] > 0 {
+				df++
 			}
 		}
-		if containsTerm(key, t) {
-			keyHits++
+		if df == 0 {
+			continue
 		}
-		if containsTerm(value, t) {
-			valueHits++
+		idf := math.Log(1 + (n-df+0.5)/(df+0.5))
+		for i, tf := range tfs {
+			if tf == 0 {
+				continue
+			}
+			relevant[i] = true
+			norm := tf * (bm25K1 + 1) / (tf + bm25K1*(1-bm25B+bm25B*docs[i].length/avgLen))
+			scores[i] += bm25Scale * idf * norm
 		}
 	}
-	relevant = tagHits+keyHits+valueHits > 0
-	s = 10*float64(tagHits) + 6*float64(keyHits) + 2*math.Min(5, float64(valueHits))
-	days := now.Sub(f.UpdatedAt).Hours() / 24
-	s += math.Max(0, 8*(1-days/recencyDays))
-	if project != "" && f.Scope == project {
-		s += 3 // the current project's own notes beat general ones
+	for i, f := range facts {
+		days := now.Sub(f.UpdatedAt).Hours() / 24
+		scores[i] += math.Max(0, recencyBonus*(1-days/recencyDays))
+		if project != "" && f.Scope == project {
+			scores[i] += projectBonus
+		}
 	}
-	return s, relevant
+	return scores, relevant
 }
 
 // Recall returns the best-matching facts for the query.
@@ -110,17 +199,17 @@ func (s *Store) Recall(q Query) ([]Fact, error) {
 	}
 	now := s.Now()
 	terms := keywords(q.Topic)
+	scores, relevant := rank(facts, terms, q.Project, now)
 	type ranked struct {
 		f Fact
 		s float64
 	}
 	var rs []ranked
-	for _, f := range facts {
-		sc, ok := score(f, terms, q.Project, now)
-		if len(terms) > 0 && !ok {
+	for i, f := range facts {
+		if len(terms) > 0 && !relevant[i] {
 			continue
 		}
-		rs = append(rs, ranked{f, sc})
+		rs = append(rs, ranked{f, scores[i]})
 	}
 	sort.SliceStable(rs, func(i, j int) bool { return rs[i].s > rs[j].s })
 
