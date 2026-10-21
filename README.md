@@ -114,3 +114,7 @@ read [docs/CAPABILITIES.md](docs/CAPABILITIES.md) for the full list. the importa
   conservative. a bare `rate_limit` is treated as a usage cap with an estimated 5 h reset unless claude
   reported the exact reset earlier.
 - the indicator band is drawn on the terminal and desktop app only.
+
+## license
+
+mit. see [LICENSE](LICENSE).
