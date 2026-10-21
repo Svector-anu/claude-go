@@ -10,10 +10,11 @@ and claude-go only decides which one runs.
 ## install
 
 ```
-go install github.com/Svector-anu/claude-go/cmd/claude-go@latest
+curl -fsSL https://raw.githubusercontent.com/Svector-anu/claude-go/main/install.sh | sh
 ```
 
-needs go 1.26. macos and linux. then:
+macos and linux, no sudo. it checks the download's sha-256 before installing to `~/.local/bin`. with go
+1.26 you can use `go install github.com/Svector-anu/claude-go/cmd/claude-go@latest` instead. then:
 
 ```
 claude-go setup                          # once
